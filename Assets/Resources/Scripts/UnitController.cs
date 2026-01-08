@@ -119,7 +119,7 @@ public class UnitController : MonoBehaviour
         PathfindingNode previousNode = currentNodeInList.Value;
         PathfindingNode finalNode = null;
 
-        int currentBestDistanceValue = previousNode.GetDistanceValue();
+        int currentBestDistanceValue = previousNode.DistanceValue;
 
         int loopcount = 0;
         while (finalNode == null) {
@@ -139,19 +139,19 @@ public class UnitController : MonoBehaviour
                 PathfindingNode newNode = new PathfindingNode(goalTilePosition, newPosition, previousNode);
 
 
-                if (newNode.GetDistanceValue() < currentBestDistanceValue) {
-                    currentBestDistanceValue = newNode.GetDistanceValue();
+                if (newNode.DistanceValue < currentBestDistanceValue) {
+                    currentBestDistanceValue = newNode.DistanceValue;
                     bestNewNodes.Clear();
                     bestNewNodes.AddFirst(newNode);
                     currentNodeInList = bestNewNodes.First;
                     newBestFound = true;
                 }
-                else if (newNode.GetDistanceValue() == currentBestDistanceValue) {
+                else if (newNode.DistanceValue == currentBestDistanceValue) {
                     bestNewNodes.AddLast(newNode);
                 }
 
                 if (allNodes.ContainsKey(newPosition)) {
-                    if (newNode.GetDistanceValue() < allNodes[newPosition].GetDistanceValue()) {
+                    if (newNode.DistanceValue < allNodes[newPosition].DistanceValue) {
                         allNodes[newPosition] = newNode;
                     }
                 }
@@ -179,7 +179,9 @@ public class UnitController : MonoBehaviour
                 if (currentNodeInList.Next == null) {
                     previousNode = previousNode.PreviousNode;
 
-                    currentBestDistanceValue = previousNode.GetDistanceValue();
+                    Debug.Log(previousNode.Position);
+
+                    currentBestDistanceValue = previousNode.DistanceValue;
                     bestNewNodes.Clear();
                     bestNewNodes.AddFirst(previousNode);
                     currentNodeInList = bestNewNodes.First;
@@ -193,7 +195,9 @@ public class UnitController : MonoBehaviour
             }
         }
 
-        intermediateSteps = finalNode.CollapseNodes();
+        if (finalNode == null) {
+            intermediateSteps = finalNode.CollapseNodes();
+        }
         
     }
 

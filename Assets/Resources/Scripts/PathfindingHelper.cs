@@ -4,6 +4,7 @@ using UnityEngine;
 public class PathfindingNode {
     public int DistanceFromGoal = int.MaxValue;
     public int DistanceFromOrigin = int.MaxValue;
+    public int DistanceValue = int.MaxValue;
 
     public PathfindingNode PreviousNode = null;
 
@@ -44,6 +45,7 @@ public class PathfindingNode {
 
     private void Setup(Vector3 Goal, Vector3 Position) {
         DistanceFromGoal = (int) (Vector3.Distance(Goal, Position) * 100);
+        DistanceValue = DistanceFromGoal + DistanceFromOrigin;
 
         this.Position = Vector3Int.FloorToInt(Position);
     }
@@ -64,9 +66,5 @@ public class PathfindingNode {
         }
 
         return stack;
-    }
-
-    public int GetDistanceValue() {
-        return DistanceFromGoal + DistanceFromOrigin;
     }
 }
