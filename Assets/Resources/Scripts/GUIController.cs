@@ -12,19 +12,24 @@ public class GUIController : MonoBehaviour
         None,
         Tiles,
         PathfindingFlag,
-        Units
+        Units,
+        PathfindingInfo
     }
 
     public bool holdingClick = false;
     public BrushType CurrentBrush = BrushType.Tiles;
 
     GameObject gridVisualizer;
-    GameObject pathfindingGoalpost;
+    GameObject pathfindingGoalPost;
+    GameObject pathfindingInfoPost;
+
     GameObject grid;
     Tilemap tilemap;
 
     TilePlacer tilePlacer;
     TilesManager tilesManager;
+
+    UnitController targetUnit;
     
 
     // Start is called once before the first execution of Update after the MonoBehaviour is created
@@ -34,14 +39,18 @@ public class GUIController : MonoBehaviour
         gridVisualizer.GetComponent<SpriteRenderer>().enabled = true;
         gridVisualizer.SetActive(false);
 
-        pathfindingGoalpost = GameObject.Find("Pathfinding Goalpost");
-        pathfindingGoalpost.SetActive(false);
+        pathfindingGoalPost = GameObject.Find("Pathfinding Goalpost");
+        pathfindingGoalPost.SetActive(false);
+        pathfindingInfoPost = GameObject.Find("Pathfinding Info Post");
+        pathfindingInfoPost.SetActive(false);
 
         grid = GameObject.Find("Grid");
         tilemap = grid.GetComponentInChildren<Tilemap>();
         tilePlacer = tilemap.GetComponent<TilePlacer>();
 
         tilesManager = GameObject.Find("TilesManager").GetComponent<TilesManager>();
+
+        targetUnit = GameObject.Find("BlackCircle32_0").GetComponent<UnitController>();
     }
 
     // Update is called once per frame
@@ -61,10 +70,15 @@ public class GUIController : MonoBehaviour
                         break;
 
                     case BrushType.PathfindingFlag:
+                        targetUnit.setGoalPosition(tilePosition);
                         MovePathfindingGoalPostToPosition(tilePosition);
                         break;
 
                     case BrushType.Units:
+                        break;
+
+                    case BrushType.PathfindingInfo:
+                        DisplayPathfindingInfoForTile(tilePosition);
                         break;
 
                     default:
@@ -75,11 +89,27 @@ public class GUIController : MonoBehaviour
     }
 
     //--------------------------------[[ Functions ]]--------------------------------
-    public void MovePathfindingGoalPostToPosition (Vector3Int goalPosition) {
-        if (pathfindingGoalpost.transform.position == goalPosition) { return; }
-        pathfindingGoalpost.transform.position = goalPosition;
+    public void MovePathfindingGoalPostToPosition (Vector3Int vector) {
+        if (pathfindingGoalPost.transform.position == vector) { return; }
+        pathfindingGoalPost.transform.position = vector;
 
-        Debug.Log(tilesManager.GetTileInfo(goalPosition));
+        Debug.Log(tilesManager.GetTileInfo(vector));
+    }
+
+    public void DisplayPathfindingInfoForTile(Vector3Int vector) {
+        if (pathfindingInfoPost.transform.position == vector) { return; }
+
+        pathfindingInfoPost.transform.position = vector;
+
+        Debug.Log(tilesManager.GetTileInfo(vector));
+
+        foreach (PathfindingNode node in targetUnit.intermediateSteps) {
+            if (node.Position == vector) {
+                Debug.Log(node);
+                break;
+            }
+        }
+
     }
 
     //--------------------------------[[ Input ]]--------------------------------
@@ -113,11 +143,18 @@ public class GUIController : MonoBehaviour
     public void SetPathfindingGoalpostBrushActive (bool active) {
         SetBrushTo(BrushType.PathfindingFlag, active);
 
-        pathfindingGoalpost.SetActive(active);
+        pathfindingGoalPost.SetActive(active);
     }
 
     public void SetUnitsBrushActive (bool active) {
         SetBrushTo(BrushType.Units, active);
+    }
+
+    public void SetPathfindingInfoBrushActive (bool active) {
+        SetBrushTo(BrushType.PathfindingInfo, active);
+
+        pathfindingGoalPost.SetActive(active);
+        pathfindingInfoPost.SetActive(active);
     }
 
 

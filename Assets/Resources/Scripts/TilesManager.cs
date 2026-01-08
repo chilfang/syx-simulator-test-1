@@ -4,6 +4,7 @@ using System.Linq.Expressions;
 using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
 using UnityEditor.U2D;
+using UnityEditorInternal;
 using UnityEngine;
 using UnityEngine.Rendering;
 using UnityEngine.Tilemaps;
@@ -46,15 +47,16 @@ public class TileInfo {
         { "GreenSquare32_0", TileEnum.Green },
     };
 
+    private static readonly Tilemap tilemap = GameObject.Find("Grid").GetComponentInChildren<Tilemap>();
+
     public TileEnum tileType = TileEnum.None;
     public Tile tile;
-    public HashSet<UnitController> unitsOnTile = new HashSet<UnitController>();
+    public HashSet<UnitController> unitsOnTile = new();
     public Vector3Int position;
 
     public TileInfo(Vector3Int vector) {
         Debug.Log($"Creating TileInfo for {vector}");
 
-        Tilemap tilemap = GameObject.Find("Grid").GetComponentInChildren<Tilemap>();
         position = vector;
         
         tile = tilemap.GetTile<Tile>(vector);
@@ -62,10 +64,17 @@ public class TileInfo {
         if (tile == null) { return; } 
 
         tileType = tileNameToEnumConversion[tile.sprite.name];
-        
     }
 
     public override string ToString () {
         return $"Tileinfo: (Position: {position}, TileType: {tileType}, Units on Tile: {unitsOnTile.Count})";
+    }
+
+    public void addUnitToTile (UnitController unit) {
+        unitsOnTile.Add(unit);
+    }
+
+    public void removeUnitFromTile (UnitController unit) {
+        unitsOnTile.Remove(unit);
     }
 }
