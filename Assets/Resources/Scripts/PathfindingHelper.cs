@@ -1,4 +1,7 @@
+using Mono.Cecil;
 using System.Collections.Generic;
+using System.Runtime.InteropServices.WindowsRuntime;
+using Unity.Mathematics;
 using UnityEngine;
 
 public class PathfindingNode {
@@ -10,41 +13,40 @@ public class PathfindingNode {
 
     public Vector3Int Position;
 
-    private const int distanceValueMultiplier = 100;
+    private const int distanceFromOriginMultiplier = 100;
 
     public static readonly Vector3Int[] ValidDirections = {
-        new Vector3Int(-1, -1),
+        //new Vector3Int(-1, -1),
         new Vector3Int(0, -1),
-        new Vector3Int(1, -1),
+        //new Vector3Int(1, -1),
 
         new Vector3Int(-1, 0),
         new Vector3Int(1, 0),
 
-        new Vector3Int(-1, 1),
+        //new Vector3Int(-1, 1),
         new Vector3Int(0, 1),
-        new Vector3Int(1, 1),
+        //new Vector3Int(1, 1),
     };
 
     //--------------------------------[[ Constructors ]]--------------------------------
     public PathfindingNode (Vector3 Goal, Vector3 Position) {
-        Setup(Goal, Position);
-
         DistanceFromOrigin = 0;
+
+        Setup(Goal, Position);
     }
     public PathfindingNode(Vector3 Goal, Vector3 Position, PathfindingNode PreviousNode) {
+        DistanceFromOrigin = PreviousNode.DistanceFromOrigin + distanceFromOriginMultiplier;
+
         Setup(Goal, Position);
+
         this.PreviousNode = PreviousNode;
 
-        DistanceFromOrigin = PreviousNode.DistanceFromOrigin + distanceValueMultiplier;
     }
 
     //--------------------------------[[ Functions ]]--------------------------------
-    public override string ToString () {
-        return $"PathfindingNode: (Distance from goal: {DistanceFromGoal}, Distance from origin: {DistanceFromOrigin}, Distance value: {GetDistanceValue()})";
-    }
 
     private void Setup(Vector3 Goal, Vector3 Position) {
-        DistanceFromGoal = (int) (Vector3.Distance(Goal, Position) * 100);
+        DistanceFromGoal = (int) ((math.abs(Goal.x - Position.x) + math.abs(Goal.y - Position.y)) * 100);
         DistanceValue = DistanceFromGoal + DistanceFromOrigin;
 
         this.Position = Vector3Int.FloorToInt(Position);
@@ -67,4 +69,29 @@ public class PathfindingNode {
 
         return stack;
     }
+
+    //--------------------------------[[ Overrides ]]--------------------------------
+
+    public override bool Equals (object obj) {
+        return Position == ((PathfindingNode) obj).Position;
+    }
+
+    public override string ToString () {
+        return $"PathfindingNode: (Position: {Position}, Distance from goal: {DistanceFromGoal}, Distance from origin: {DistanceFromOrigin}, Distance value: {DistanceValue})";
+    }
+
+    public override int GetHashCode () {
+        int hash = 13;
+        
+        hash = (hash * 7) + Position.x;
+        hash = (hash * 7) + Position.y;
+        
+        return hash;
+    }
 }
+
+//public class PathfindingNodeComparer : IComparer<PathfindingNode> {
+//    public int Compare(PathfindingNode node1, PathfindingNode node2) {
+//        return node1.DistanceValue.CompareTo(node2.DistanceValue);
+//    }
+//}

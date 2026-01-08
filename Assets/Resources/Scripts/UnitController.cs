@@ -1,6 +1,8 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Dynamic;
+using System.Linq;
 using Unity.Mathematics;
 using UnityEditor;
 using UnityEngine;
@@ -28,6 +30,9 @@ public class UnitController : MonoBehaviour
     //technical stats
     public TileInfo parentTile;
     public Vector3 direction = Vector3.zero;
+    public TileEnum[] inaccessibleTiles = {
+        TileEnum.Red
+    };
 
     //rpg stats
     public float speedModifier = 5f;
@@ -45,6 +50,11 @@ public class UnitController : MonoBehaviour
         tilesManager = GameObject.Find("TilesManager").GetComponentInChildren<TilesManager>();
 
         setParentTile(WorldPositionToGridPosition(transform.position));
+
+        Debug.Log(
+            new PathfindingNode(Vector3Int.one, Vector3Int.zero).Equals(
+                new PathfindingNode(Vector3Int.one, Vector3Int.zero, new PathfindingNode(Vector3Int.zero, Vector3Int.zero))
+                ));
     }
 
     // Update is called once per frame
@@ -68,7 +78,7 @@ public class UnitController : MonoBehaviour
             }
 
             if (currentPosition == currentNode.Position) {
-                Debug.Log($"{characterName} ({name}) arrived at {currentNode.Position}");
+                //Debug.Log($"{characterName} ({name}) arrived at {currentNode.Position}");
                 setParentTile(currentNode.Position);
 
                 intermediateSteps.Pop();
@@ -103,105 +113,83 @@ public class UnitController : MonoBehaviour
     }
 
     private void GenerateIntermediateSteps() {
-        //intermediateSteps.Enqueue(new PathfindingNode(new Vector3(13, -1), goalTilePosition));
         Debug.Log("Generating Steps");
 
-        Dictionary<Vector3Int, PathfindingNode> allNodes = new() {
-            { parentTile.position, new PathfindingNode(goalTilePosition, parentTile.position) }
-        };
+        List<PathfindingNode> openList = new() { new PathfindingNode(goalTilePosition, parentTile.position) };
+        HashSet<Vector3Int> closedList = new();
 
+        Debug.Log(openList[0]);
 
-        LinkedList<PathfindingNode> bestNewNodes = new();
-        bestNewNodes.AddFirst(allNodes[parentTile.position]);
-
-        LinkedListNode<PathfindingNode> currentNodeInList = bestNewNodes.First;
-
-        PathfindingNode previousNode = currentNodeInList.Value;
         PathfindingNode finalNode = null;
 
-        int currentBestDistanceValue = previousNode.DistanceValue;
+        //TilePlacer tilePlacer = GameObject.Find("Tilemap").GetComponent<TilePlacer>();
+        //tilePlacer.SetBrushToGreen(true);
 
-        int loopcount = 0;
-        while (finalNode == null) {
-            loopcount++;
-            if (loopcount == 50) {
+        int loopCount = 0;
+        while (openList.Count > 0) {
+            loopCount++;
+            if (loopCount > 500) { 
                 Debug.Log("Too many loops");
+
                 break;
             }
 
-            bool newBestFound = false;
-            Debug.Log("new loop");
-            foreach (Vector3Int searchDirection in PathfindingNode.ValidDirections) {
-                Vector3Int newPosition = previousNode.Position + searchDirection;
+            PathfindingNode currentNode = openList.OrderBy(node => node.DistanceValue).First();
 
-                if (!isTileValid(newPosition)) { continue; }
+            //Debug.Log($"{loopCount}, {openList.Count}: {currentNode}");
 
-                PathfindingNode newNode = new PathfindingNode(goalTilePosition, newPosition, previousNode);
-
-
-                if (newNode.DistanceValue < currentBestDistanceValue) {
-                    currentBestDistanceValue = newNode.DistanceValue;
-                    bestNewNodes.Clear();
-                    bestNewNodes.AddFirst(newNode);
-                    currentNodeInList = bestNewNodes.First;
-                    newBestFound = true;
-                }
-                else if (newNode.DistanceValue == currentBestDistanceValue) {
-                    bestNewNodes.AddLast(newNode);
-                }
-
-                if (allNodes.ContainsKey(newPosition)) {
-                    if (newNode.DistanceValue < allNodes[newPosition].DistanceValue) {
-                        allNodes[newPosition] = newNode;
-                    }
-                }
-                else {
-                    allNodes.Add(newPosition, newNode);
-                }
-
-                if (newPosition == goalTilePosition) {
-                    Debug.Log(bestNewNodes.Count);
-
-                    bestNewNodes.Remove(newNode);
-                    finalNode = newNode;
-
-                    Debug.Log($"Final node found {newPosition}");
-                }
-            }
-
-            if (allNodes.Count > 100) {
-                Debug.Log("Too many pathfinding nodes");
-                bestNewNodes.Clear();
+            if (currentNode.Position == goalTilePosition) {
+                finalNode = currentNode;
                 break;
             }
 
-            if (!newBestFound) {
-                if (currentNodeInList.Next == null) {
-                    previousNode = previousNode.PreviousNode;
+            openList.Remove(currentNode);
+            closedList.Add(currentNode.Position);
 
-                    Debug.Log(previousNode.Position);
+            foreach (var direction in PathfindingNode.ValidDirections) {
+                Vector3Int newPosition = currentNode.Position + direction;
+                //PathfindingNode newNode = new PathfindingNode(goalTilePosition, newPosition, currentNode);
 
-                    currentBestDistanceValue = previousNode.DistanceValue;
-                    bestNewNodes.Clear();
-                    bestNewNodes.AddFirst(previousNode);
-                    currentNodeInList = bestNewNodes.First;
-                } else {
-                    currentNodeInList = currentNodeInList.Next; 
+                if (closedList.Contains(newPosition)) {
+                    continue;
                 }
-            }
 
-            if (finalNode == null) {
-                previousNode = currentNodeInList.Value;
+                if (!isTileValid(newPosition)) {
+                    continue;
+                }
+
+                if (!openList.Contains(currentNode)) {
+                    //Debug.Log($"{!openList.Contains(currentNode)}, {currentNode.Position}");
+
+                    //foreach (PathfindingNode node in openList) {
+                    //    if (node.Position == currentNode.Position) {
+                    //        Debug.Log($"{node.Position}, {currentNode.Position}, {node.GetHashCode()}, {currentNode.GetHashCode()}, {node == currentNode}, {node.Equals(currentNode)}");
+                    //    }
+                    //}
+                    openList.Add(new PathfindingNode(goalTilePosition, newPosition, currentNode));
+                }
+
+                //tilePlacer.PaintTileAt(currentNode.Position);
             }
         }
 
-        if (finalNode == null) {
+        if (finalNode != null) {
             intermediateSteps = finalNode.CollapseNodes();
         }
-        
+
+
+
     }
 
     public bool isTileValid(Vector3Int vector) {
-        return !(tilesManager.GetTileInfo(vector).tileType == TileEnum.Red);
+        TileEnum tileType = tilesManager.GetTileInfo(vector).tileType;
+        
+        foreach (var type in inaccessibleTiles) {
+            if (tileType == type) {
+                return false;
+            }
+        }
+
+        return true;
     }
 }
