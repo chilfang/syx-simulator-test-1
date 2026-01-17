@@ -19,6 +19,7 @@ public enum TileEnum {
 
 public class TilesManager : MonoBehaviour
 {
+    public Dictionary<TileEnum, Tile> ConnvertTileTypeToTile = new Dictionary<TileEnum, Tile>();
     private Dictionary<Vector3Int, TileInfo> TileInfoDictionary = new Dictionary<Vector3Int, TileInfo>();
 
     public TileInfo GetTileInfo(Vector3Int vector) {
@@ -36,7 +37,9 @@ public class TilesManager : MonoBehaviour
     }
 
     private void Start () {
-
+        ConnvertTileTypeToTile[TileEnum.Red] = Resources.Load<Tile>("Tilemap/Palletes/Pallete1/RedSquare32_0");
+        ConnvertTileTypeToTile[TileEnum.Green] = Resources.Load<Tile>("Tilemap/Palletes/Pallete1/GreenSquare32_0");
+        ConnvertTileTypeToTile[TileEnum.White] = Resources.Load<Tile>("Tilemap/Palletes/Pallete1/WhiteSquare32_0");
     }
 }
 

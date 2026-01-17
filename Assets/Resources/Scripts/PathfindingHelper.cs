@@ -13,19 +13,20 @@ public class PathfindingNode {
 
     public Vector3Int Position;
 
+    private const int distanceFromGoalMultiplier = 200;
     private const int distanceFromOriginMultiplier = 100;
 
     public static readonly Vector3Int[] ValidDirections = {
-        //new Vector3Int(-1, -1),
-        new Vector3Int(0, -1),
-        //new Vector3Int(1, -1),
-
         new Vector3Int(-1, 0),
         new Vector3Int(1, 0),
 
         //new Vector3Int(-1, 1),
         new Vector3Int(0, 1),
         //new Vector3Int(1, 1),
+        
+        //new Vector3Int(-1, -1),
+        new Vector3Int(0, -1),
+        //new Vector3Int(1, -1),
     };
 
     //--------------------------------[[ Constructors ]]--------------------------------
@@ -46,7 +47,8 @@ public class PathfindingNode {
     //--------------------------------[[ Functions ]]--------------------------------
 
     private void Setup(Vector3 Goal, Vector3 Position) {
-        DistanceFromGoal = (int) ((math.abs(Goal.x - Position.x) + math.abs(Goal.y - Position.y)) * 100);
+        //DistanceFromGoal = (int) ((math.abs(Goal.x - Position.x) + math.abs(Goal.y - Position.y)) * distanceFromGoalMultiplier);
+        DistanceFromGoal = (int) (Vector3.Distance(Goal, Position) * distanceFromGoalMultiplier);
         DistanceValue = DistanceFromGoal + DistanceFromOrigin;
 
         this.Position = Vector3Int.FloorToInt(Position);

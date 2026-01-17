@@ -122,8 +122,8 @@ public class UnitController : MonoBehaviour
 
         PathfindingNode finalNode = null;
 
-        //TilePlacer tilePlacer = GameObject.Find("Tilemap").GetComponent<TilePlacer>();
-        //tilePlacer.SetBrushToGreen(true);
+        TilePlacer tilePlacer = GameObject.Find("Tilemap").GetComponent<TilePlacer>();
+        tilePlacer.SetBrushToGreen(true);
 
         int loopCount = 0;
         while (openList.Count > 0) {
@@ -169,7 +169,7 @@ public class UnitController : MonoBehaviour
                     openList.Add(new PathfindingNode(goalTilePosition, newPosition, currentNode));
                 }
 
-                //tilePlacer.PaintTileAt(currentNode.Position);
+                tilePlacer.PaintTileAt(currentNode.Position);
             }
         }
 

@@ -9,13 +9,13 @@ public class TilePlacer : MonoBehaviour
 {
     //--------------------------------[[ Variables ]]--------------------------------
 
-    public Dictionary<TileEnum, Tile> Tiles = new Dictionary<TileEnum, Tile>();
 
     GameObject grid;
     Tilemap tilemap;
     GameObject mainGUI;
 
     GUIController guiController;
+    TilesManager tilesManager;
 
     public TileEnum TileBrush = TileEnum.Red;
 
@@ -27,10 +27,8 @@ public class TilePlacer : MonoBehaviour
         mainGUI = GameObject.Find("MainGUI");
 
         guiController = mainGUI.GetComponent<GUIController>();
+        tilesManager = GameObject.Find("TilesManager").GetComponent<TilesManager>();
 
-        Tiles[TileEnum.Red] = Resources.Load<Tile>("Tilemap/Palletes/Pallete1/RedSquare32_0");
-        Tiles[TileEnum.Green] = Resources.Load<Tile>("Tilemap/Palletes/Pallete1/GreenSquare32_0");
-        Tiles[TileEnum.White] = Resources.Load<Tile>("Tilemap/Palletes/Pallete1/WhiteSquare32_0");
     }
 
     // Update is called once per frame
@@ -42,7 +40,14 @@ public class TilePlacer : MonoBehaviour
     //--------------------------------[[ Functions ]]--------------------------------
 
     public void PaintTileAt(Vector3Int position) {
-        tilemap.SetTile(position, Tiles[TileBrush]);
+        TileInfo tileInfo = tilesManager.GetTileInfo(position);
+        TileEnum newTileType = TileBrush;
+        Tile newTile = tilesManager.ConnvertTileTypeToTile[newTileType];
+
+        tilemap.SetTile(position, newTile);
+
+        tileInfo.tileType = newTileType;
+        tileInfo.tile = newTile;
     }
 
     //--------------------[[ Brush switching ]]--------------------
